@@ -47,7 +47,7 @@ A full-stack inventory and order management system built with **FastAPI** and **
 ---
 
 ## Project Structure
-![Project Stucture](screenshots/project-stucture.png)
+![Project Stucture](screenshots\project-structure.png)
 
 
 
