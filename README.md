@@ -144,7 +144,7 @@ http://localhost:8000/docs
 
 
 *** Frontend Setup (Streamlit) ***
-Open another terminal and run: 
+1. Open another terminal and run: 
 streamlit run app.py
 
 
