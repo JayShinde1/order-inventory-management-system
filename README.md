@@ -143,7 +143,7 @@ Swagger Docs:
 http://localhost:8000/docs
 
 
-*** Frontend Setup (Streamlit) ***
+**Frontend Setup (Streamlit)**
 1. Open another terminal and run: 
 streamlit run app.py
 
