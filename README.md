@@ -47,30 +47,7 @@ A full-stack inventory and order management system built with **FastAPI** and **
 ---
 
 ## Project Structure
-inventory-order-management-system/
-├── backend/
-│ ├── main.py
-│ ├── models.py
-│ ├── database.py
-│ ├── routers/
-│ │ ├── __init__.py
-│ │ ├── auth.py
-│ │ ├── public.py
-│ │ ├── orders.py
-│ │ └── admin.py
-│ ├── schemas/
-│ │ ├── __init__.py
-│ │ ├── book.py
-│ │ ├── user.py
-│ └── alembic/
-├── frontend/
-│ └── app.py
-├── screenshots/
-├── README.md
-├── venv/
-├── requirements.txt
-└── LICENSE
-
+![Project Stucture](screenshots/project-stucture.png)
 
 
 
