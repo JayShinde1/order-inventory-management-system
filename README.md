@@ -110,50 +110,99 @@ A full-stack inventory and order management system built with **FastAPI** and **
 
 ---
 
+## Run Project
 
-### Run Project
+---
 
-**Backend Setup**
-1️. Create Virtual Environment
+## Backend Setup
 
+### 1. Create Virtual Environment
+
+**Windows**
 ```bash
-**Windows**:
 cd backend
 python -m venv venv
 venv\Scripts\activate
+```
 
-**macOS / Linux:**
-cd backend 
+**macOS / Linux**
+```bash
+cd backend
 python3 -m venv venv
 source venv/bin/activate
+```
 
-2️. Install Dependencies:
+---
+
+### 2. Install Dependencies
+```bash
 pip install -r requirements.txt
+```
 
-3️. Run Database Migrations (if applicable):
+---
+
+### 3. Run Database Migrations (if applicable)
+```bash
 alembic upgrade head
+```
 
-4️. Start Backend Server:
+---
+
+### 4. Start Backend Server
+```bash
 uvicorn main:app --reload
+```
 
+Backend will be available at:  
+http://localhost:8000  
 
-Backend will be available at:
-http://localhost:8000
+Swagger Docs:  
+http://localhost:8000/docs  
 
-Swagger Docs:
-http://localhost:8000/docs
+---
 
+## Frontend Setup (Streamlit)
 
-**Frontend Setup (Streamlit)**
-1. Open another terminal and run: 
+### 1. Create Virtual Environment
+
+**Windows**
+```bash
+cd frontend
+python -m venv venv
+venv\Scripts\activate
+```
+
+**macOS / Linux**
+```bash
+cd frontend
+python3 -m venv venv
+source venv/bin/activate
+```
+
+---
+
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+### 3. Start Frontend
+```bash
 streamlit run app.py
+```
 
+Frontend will be available at:  
+http://localhost:8501  
 
-### How to use my application:
-1. Start the backend server
-2. Start the Streamlit frontend
-3. Browse books publicly
-4. Create an account and log in
-5. Place orders as a user
-6. Manage inventory and orders as admin
+---
 
+## How to Use the Application
+
+1. Start the backend server  
+2. Start the Streamlit frontend  
+3. Browse books publicly  
+4. Create an account and log in  
+5. Place orders as a user  
+6. Manage inventory and orders as admin  
