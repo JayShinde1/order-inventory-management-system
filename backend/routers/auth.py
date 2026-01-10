@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 #command to generate a random secret-key: openssl rand -hex 32
-SECRET_KEY = 'YOUR_SECRET_KEY'
+SECRET_KEY = 'b04b071d127fde3262128e3468fca276e7dfc71c33b2de063bf068e826c8d93f'
 ALGORITHM = 'HS256' 
 
 
