@@ -116,13 +116,14 @@ A full-stack inventory and order management system built with **FastAPI** and **
 **Backend Setup**
 1️. Create Virtual Environment
 
-Windows:
+```bash
+**Windows**:
 cd backend
 python -m venv venv
 venv\Scripts\activate
 
-macOS / Linux:
-cd backend
+**macOS / Linux:**
+cd backend 
 python3 -m venv venv
 source venv/bin/activate
 
