@@ -4,7 +4,10 @@ import requests
 # =========================
 # CONFIG
 # =========================
-BASE_URL = "https://books-inventory-backend.onrender.com"
+BASE_URL = os.getenv(
+    "FRONTEND_API_BASE_URL",
+    "http://localhost:8000"
+)
 
 st.set_page_config(
     page_title="Inventory & Order Management System",
