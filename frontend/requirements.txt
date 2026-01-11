@@ -16,3 +16,4 @@ jinja2
 Streamlit
 pydantic[email]
 alembic
+requests
