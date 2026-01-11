@@ -4,7 +4,7 @@ import requests
 # =========================
 # CONFIG
 # =========================
-BASE_URL = "http://localhost:8000"
+BASE_URL = "https://books-inventory-backend.onrender.com"
 
 st.set_page_config(
     page_title="Inventory & Order Management System",
