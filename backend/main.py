@@ -9,7 +9,6 @@ app = FastAPI()
 def health_check():
     return {'status':'OK'}
 
-models.Base.metadata.create_all(bind = engine)
 app.include_router(books.router)
 app.include_router(auth.router)
 app.include_router(admin.router)

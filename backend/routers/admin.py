@@ -3,10 +3,11 @@ from starlette import status
 from pydantic import BaseModel, Field
 from typing import Annotated, Optional
 from database import Session_local, engine
-from models import Books, Users, Orders
+from models import Books, Users, Orders, Sales
 from schemas.book import Book, updateBook
 from routers.auth import get_current_user, user_dependency
 from database import db_dependency
+from datetime import datetime, timezone
 
 
 router = APIRouter(
@@ -92,7 +93,7 @@ def delete_book(user: user_dependency, db: db_dependency, book_id: int):
 
 
 @router.get('/get-all-orders', status_code=status.HTTP_200_OK)
-async def get_all_orders(user: user_dependency, db: db_dependency):
+async def get_my_orders(user: user_dependency, db: db_dependency):
     if user.get('role') != 'admin' and not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed.")
     
@@ -101,26 +102,64 @@ async def get_all_orders(user: user_dependency, db: db_dependency):
 
 
 
-@router.patch("/orders/{order_id}/status", status_code=status.HTTP_204_NO_CONTENT)
-async def update_status(user: user_dependency, payload: UpdateOrderStatus, db: db_dependency, order_id: int):
+@router.patch("/orders/{order_id}/status", status_code=status.HTTP_200_OK)
+async def update_status(user: user_dependency, update_status: UpdateOrderStatus, db: db_dependency, order_id: int):
 
     db_user =  db.query(Users).filter(Users.id == user['id']).first()
     if db_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Admin privilages are required")
     
-    valid_statuses = ['Placed', 'Cancelled', 'Confirmed', 'Shipped', 'Delivered']
-    new_status = payload.status
+    valid_statuses = ['PLACED', 'CANCELLED', 'CONFIRMED', 'SHIPPED', 'DELIVERED']
+    new_status = update_status.status
     if new_status not in valid_statuses:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid order status")
+    
+    allowed_transitions = {
+        "PLACED": {"CONFIRMED", "CANCELLED"},
+        "CONFIRMED":{"SHIPPED", "CANCELLED"},
+        "SHIPPED": {"DELIVERED"},
+        "CANCELLED": set(),
+        "DELIVERED": set()
+    }
 
     req_order = db.query(Orders).filter(Orders.id == order_id).first()
     if not req_order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
-    if req_order.status in {"CANCELLED", "DELIVERED"}:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Order status can no longer be updated")
+    current_status = req_order.status
+
+    if current_status not in allowed_transitions:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Invalid order status transition")
+    
+    allowed_next = allowed_transitions[current_status]
+
+    if new_status not in allowed_next:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Invalid order status transition")
+    
+    if new_status == "CANCELLED":
+        fetched_book = db.query(Books).filter(Books.id == req_order.book_id).first()
+        if not fetched_book:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "Book not found")
+        fetched_book.stock_quantity += req_order.quantity
+    
+    if new_status == "DELIVERED":
+
+        fetched_book = db.query(Books).filter(Books.id == req_order.book_id).first()
+        if not fetched_book:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+
+        sale_model = Sales(
+            book_id = fetched_book.id,
+            quantity = req_order.quantity,
+            price_at_sale = req_order.price_at_purchase,
+            domain = fetched_book.domain,
+            sale_date = datetime.now(timezone.utc).date()
+        )
+        
+        db.add(sale_model)
+
 
     req_order.status = new_status
     db.commit()
     db.refresh(req_order)
-    return {"message": "Order status updated successfully",   "order_id": req_order.id, "status": req_order.status}
+    return {"message": "Order status updated successfully", "order_id": req_order.id, "status": req_order.status}

@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, func, Date
 from datetime import datetime
 
 Base = declarative_base()
@@ -39,6 +39,26 @@ class Orders(Base):
     book_id = Column(Integer, ForeignKey("books.id"), nullable = False)
     quantity = Column(Integer, nullable = False)
     price_at_purchase = Column(Integer, nullable = False)
-    status = Column(String, nullable = False)
+    status = Column(String, nullable = False, default = "PLACED")
     created_at = Column(DateTime(timezone = True), server_default = func.now(), nullable = False)
 
+
+class Sales(Base):
+    __tablename__ = 'sales'
+
+    id = Column(Integer, primary_key = True, index = True)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable = False)
+    quantity = Column(Integer, nullable = False)
+    price_at_sale = Column(Integer, nullable = False)
+    domain = Column(String, nullable = False)
+    sale_date = Column(Date, nullable = False)
+    created_at = Column(DateTime(timezone = True), server_default = func.now(), nullable = False)
+
+
+class HistoricalSales(Base):
+    __tablename__ = "historical_sales"
+
+    id = Column(Integer, primary_key = True, index = True)
+    domain = Column(String, nullable = False)
+    quantity = Column(Integer, nullable = False)
+    sale_date = Column(Date, nullable = False)

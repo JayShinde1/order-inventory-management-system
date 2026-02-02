@@ -5,10 +5,7 @@ import os
 # =========================
 # CONFIG
 # =========================
-BASE_URL = os.getenv(
-    "FRONTEND_API_BASE_URL",
-    "http://localhost:8000"
-)
+BASE_URL = os.getenv("FRONTEND_API_BASE_URL", "http://localhost:8000")
 
 st.set_page_config(
     page_title="Inventory & Order Management System",
@@ -18,14 +15,9 @@ st.set_page_config(
 # =========================
 # SESSION STATE
 # =========================
-if "token" not in st.session_state:
-    st.session_state.token = None
-if "role" not in st.session_state:
-    st.session_state.role = None
-if "username" not in st.session_state:
-    st.session_state.username = None
-if "user_details" not in st.session_state:
-    st.session_state.user_details = None
+for key in ["token", "role", "username", "user_details"]:
+    if key not in st.session_state:
+        st.session_state[key] = None
 
 
 def auth_headers():
@@ -53,12 +45,7 @@ if not st.session_state.token:
             st.session_state.token = token_data["access_token"]
             st.session_state.username = username
 
-            # fetch user details
-            me = requests.get(
-                f"{BASE_URL}/get-details",
-                headers=auth_headers()
-            )
-
+            me = requests.get(f"{BASE_URL}/get-details", headers=auth_headers())
             if me.status_code == 200:
                 st.session_state.user_details = me.json()
                 st.session_state.role = me.json().get("role")
@@ -67,119 +54,100 @@ if not st.session_state.token:
             st.rerun()
         else:
             st.error("Invalid username or password")
-
 else:
     st.sidebar.success(f"Logged in as {st.session_state.username}")
     st.sidebar.write(f"Role: **{st.session_state.role}**")
 
     if st.sidebar.button("Logout"):
-        st.session_state.token = None
-        st.session_state.role = None
-        st.session_state.username = None
-        st.session_state.user_details = None
+        for key in ["token", "role", "username", "user_details"]:
+            st.session_state[key] = None
         st.rerun()
 
 
 # =========================
-# PUBLIC HOME – BROWSE BOOKS
+# PUBLIC HOME
 # =========================
 st.title("Inventory & Order Management System")
-st.write("Browse books publicly. Login to place orders or manage inventory.")
+st.write("Browse books publicly or search using natural language.")
 
-st.header("Browse Books")
+# =========================
+# AI SEARCH
+# =========================
+st.subheader("🔍 AI-Powered Book Search")
 
-browse_option = st.selectbox(
-    "Browse Options",
-    [
-        "All Books",
-        "By Book ID",
-        "By Domain",
-        "By Domain & Budget"
-    ]
+query = st.text_input(
+    "Ask in natural language",
+    placeholder="e.g. Give me personal finance books under 300 sorted by price desc"
 )
 
-books = None
+page = st.number_input("Page", min_value=1, value=1)
+page_size = st.selectbox("Page Size", [5, 10, 20, 50], index=1)
 
-if browse_option == "All Books":
-    res = requests.get(f"{BASE_URL}/public/")
+if st.button("Search with AI"):
+    payload = {
+        "query": query,
+        "page": page,
+        "page_size": page_size
+    }
+
+    res = requests.post(f"{BASE_URL}/public/ai-search", json=payload)
+
     if res.status_code == 200:
-        books = res.json()
+        data = res.json()
 
-elif browse_option == "By Book ID":
-    book_id = st.number_input("Book ID", min_value=1)
-    if st.button("Search"):
-        res = requests.get(f"{BASE_URL}/public/{book_id}")
-        if res.status_code == 200:
-            books = [res.json()]
-        else:
-            st.error("Book not found")
-
-elif browse_option == "By Domain":
-    domain = st.text_input("Domain")
-    if st.button("Search"):
-        res = requests.get(
-            f"{BASE_URL}/public/search/",
-            params={"domain": domain}
+        st.caption(
+            f"Page {data['current_page']} of {data['total_pages']} "
+            f"({data['total_items']} total results)"
         )
-        if res.status_code == 200:
-            books = res.json()
-        else:
-            st.error("No books found")
 
-elif browse_option == "By Domain & Budget":
-    domain = st.text_input("Domain")
-    max_price = st.number_input("Max Price", min_value=0)
-    if st.button("Search"):
-        res = requests.get(
-            f"{BASE_URL}/public/domain/{domain}",
-            params={"max_price": max_price}
-        )
-        if res.status_code == 200:
-            books = res.json()
-        else:
-            st.error("No books found")
+        results = data.get("results", [])
 
-if books:
-    st.table(books)
-
-
-# =========================
-# REGISTER NEW USER (ONLY IF LOGGED OUT)
-# =========================
-if not st.session_state.token:
-    st.divider()
-    st.subheader("Create Account")
-
-    new_username = st.text_input("Username", key="signup_username")
-    new_email = st.text_input("Email", key="signup_email")
-    new_password = st.text_input("Password", type="password", key="signup_password")
-
-    if st.button("Create Account"):
-        if not new_username or not new_email or not new_password:
-            st.error("All fields are required")
-        else:
-            payload = {
-                "username": new_username,
-                "email": new_email,
-                "password": new_password,
-                "role": "user"
-            }
-
-            res = requests.post(
-                f"{BASE_URL}/create-user",
-                json=payload
+        if results:
+            st.dataframe(
+                results,
+                use_container_width=True,
+                hide_index=True
             )
+        else:
+            st.info("No books matched your query.")
+    else:
+        st.error(res.text)
 
-            if res.status_code == 201:
-                st.success("Account created successfully. You can now log in.")
-            else:
-                st.error(res.text)
+
+# =========================
+# BASIC PUBLIC BROWSING
+# =========================
+st.divider()
+st.subheader("📚 Browse All Books")
+
+res = requests.get(f"{BASE_URL}/public/")
+if res.status_code == 200:
+    data = res.json()
+
+    st.caption(
+        f"Page {data['current_page']} of {data['total_pages']} "
+        f"({data['total_items']} total books)"
+    )
+
+    books = data.get("results", [])
+
+    if books:
+        st.dataframe(
+            books,
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.info("No books available.")
+else:
+    st.error("Failed to fetch books")
 
 
 # =========================
 # STOP IF NOT LOGGED IN
 # =========================
 if not st.session_state.token:
+    st.info("Login to place orders or manage inventory.")
     st.stop()
 
 
@@ -189,34 +157,17 @@ if not st.session_state.token:
 tabs = ["My Profile", "Place Order", "My Orders"]
 
 if st.session_state.role == "admin":
-    tabs.extend([
-        "Add Book",
-        "All Orders",
-        "Update Order Status",
-        "Update Book Stock",
-        "Delete Book"
-    ])
+    tabs += ["Add Book", "All Orders"]
 
 tab_objs = st.tabs(tabs)
 
 
 # =========================
-# USER PROFILE (GET DETAILS)
+# MY PROFILE
 # =========================
 with tab_objs[0]:
     st.header("My Profile")
-
-    if "show_profile" not in st.session_state:
-        st.session_state.show_profile = False
-
-    if st.button("View / Hide Profile"):
-        st.session_state.show_profile = not st.session_state.show_profile
-
-    if st.session_state.show_profile:
-        if st.session_state.user_details:
-            st.json(st.session_state.user_details)
-        else:
-            st.info("User details not available")
+    st.json(st.session_state.user_details)
 
 
 # =========================
@@ -256,7 +207,7 @@ with tab_objs[2]:
     if res.status_code == 200:
         orders = res.json()
         if orders:
-            st.table(orders)
+            st.dataframe(orders, use_container_width=True, hide_index=True)
         else:
             st.info("No orders found.")
     else:

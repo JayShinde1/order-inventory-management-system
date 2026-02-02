@@ -36,8 +36,7 @@ def create_order(user: user_dependency, db: db_dependency, order_request: Create
 
     order_model = Orders(**order_request.model_dump(),
                         user_id = user.get('id'),
-                        price_at_purchase = required_book.price, 
-                        status = "Placed")
+                        price_at_purchase = required_book.price)
     
     # reducing the stock in Books table
     required_book.stock_quantity -= order_request.quantity

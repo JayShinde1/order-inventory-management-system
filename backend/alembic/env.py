@@ -2,15 +2,28 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-import models
 from alembic import context
+import os
+
+from dotenv import load_dotenv
+import models
+
+# Load environment variables
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
+
 fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
