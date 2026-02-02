@@ -13,6 +13,7 @@ httpx
 pytest-asyncio
 aiofiles
 jinja2
+streamlit
 
 langchain
 langchain_core
